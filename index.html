@@ -1,0 +1,2042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
+    <title>Smart Nutrition Calculator</title>
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #2b2b2b, #1a1a1a);
+            font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+            padding: 12px;
+        }
+
+        .calculator {
+            background: #1e1e1e;
+            border-radius: 28px;
+            padding: 20px 18px 24px;
+            width: 620px;
+            max-width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.06);
+            border: 1px solid #3a3a3a;
+        }
+
+        .calculator-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #b0b0b0;
+            text-align: center;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            padding-bottom: 8px;
+        }
+
+        /* ----- DISPLAY AREA ----- */
+        .display {
+            background: #0d0d0d;
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #2b2b2b;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.8), 0 1px 0 #3a3a3a;
+            color: #c7e9c0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .display .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 3px 0;
+            border-bottom: 1px dashed #2a2a2a;
+            font-size: 13px;
+        }
+
+        .display .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .display .result-label {
+            color: #9a9a9a;
+            font-weight: 400;
+            letter-spacing: 0.3px;
+        }
+
+        .display .result-value {
+            color: #b5f0a0;
+            font-weight: 600;
+            font-size: 15px;
+            text-shadow: 0 0 6px rgba(100, 200, 80, 0.2);
+            background: #1a1a1a;
+            padding: 2px 10px;
+            border-radius: 20px;
+            min-width: 65px;
+            text-align: right;
+        }
+
+        .display .result-row.highlight {
+            background: #1a2a1a;
+            border-radius: 12px;
+            margin: 2px 0;
+            padding: 4px 8px;
+            border-bottom: 1px solid #3a5a3a;
+        }
+        .display .result-row.highlight .result-value {
+            color: #e0f0d0;
+            font-weight: 700;
+            background: #1f3f1f;
+        }
+
+        .chart-container {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #macroChart {
+            background: #141414;
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(0, 200, 100, 0.15);
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* ----- BMI SCALE ----- */
+        .bmi-scale-container {
+            margin: 10px 0 4px 0;
+            padding: 0 4px;
+        }
+        .bmi-scale {
+            width: 100%;
+            height: 12px;
+            border-radius: 8px;
+            background: linear-gradient(to right, #4a90e2, #50e3c2, #f5a623, #d0021b);
+            position: relative;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+        .bmi-marker {
+            position: absolute;
+            top: -10px;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 18px;
+            text-shadow: 0 0 6px rgba(0, 0, 0, 0.9), 0 0 2px #000;
+            transition: left 0.15s ease;
+            line-height: 1;
+        }
+        .bmi-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #888;
+            padding: 2px 2px 0 2px;
+            letter-spacing: 0.3px;
+        }
+
+        /* ----- INPUT AREA ----- */
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .row-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .row-group .field {
+            flex: 1 1 90px;
+            background: #2a2a2a;
+            padding: 4px 10px;
+            border-radius: 60px;
+            border: 1px solid #3d3d3d;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            min-width: 60px;
+        }
+
+        .row-group .field label {
+            color: #c0c0c0;
+            font-weight: 500;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .row-group .field input,
+        .row-group .field select {
+            flex: 1;
+            background: #0f0f0f;
+            border: none;
+            padding: 5px 6px;
+            border-radius: 40px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #f0f0f0;
+            outline: none;
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.8);
+            transition: 0.15s;
+            min-width: 25px;
+            -moz-appearance: textfield;
+        }
+
+        .row-group .field input::-webkit-outer-spin-button,
+        .row-group .field input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .row-group .field input:focus,
+        .row-group .field select:focus {
+            background: #141414;
+            box-shadow: inset 0 2px 8px #000, 0 0 0 2px #4a7a4a;
+        }
+
+        .row-group .field input::placeholder {
+            color: #555;
+            font-weight: 300;
+            font-size: 11px;
+        }
+
+        .row-group .field .unit {
+            color: #888;
+            font-weight: 400;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        .row-group .field select {
+            font-family: 'Segoe UI', sans-serif;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .row-group .field select option {
+            background: #1e1e1e;
+        }
+
+        .bmi-pill {
+            background: #1f2f1f;
+            border: 1px solid #3a6b3a;
+            border-radius: 60px;
+            padding: 2px 10px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #b5f0a0;
+            white-space: nowrap;
+            font-family: 'Courier New', monospace;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+            flex-shrink: 0;
+        }
+        .bmi-pill .bmi-label {
+            color: #8a8a8a;
+            font-size: 9px;
+            font-weight: 400;
+            display: block;
+            letter-spacing: 0.5px;
+        }
+        .bmi-pill .bmi-value {
+            font-size: 16px;
+            line-height: 1.2;
+        }
+        .bmi-pill .bmi-value.unknown {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .unit-toggle {
+            display: flex;
+            background: #2a2a2a;
+            border-radius: 60px;
+            padding: 2px;
+            border: 1px solid #3d3d3d;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+        .unit-toggle button {
+            background: transparent;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #aaa;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 11px;
+        }
+        .unit-toggle button.active {
+            background: #3a6b3a;
+            color: #f0faf0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .goal-target-fields {
+            display: none;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .goal-target-fields.visible {
+            display: flex;
+        }
+
+        .btn-primary {
+            background: #3a6b3a;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 60px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #f0faf0;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #1f3f1f, 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: 0.08s linear;
+            text-transform: uppercase;
+            border: 1px solid #5a8a5a;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .btn-primary:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #1f3f1f;
+        }
+        .btn-primary:hover {
+            background: #428542;
+        }
+        .btn-primary:disabled {
+            opacity: 0.4;
+            transform: translateY(0);
+            box-shadow: 0 5px 0 #1f3f1f;
+            cursor: not-allowed;
+            background: #3a5a3a;
+        }
+        .btn-primary:disabled:hover {
+            background: #3a5a3a;
+        }
+
+        .btn-secondary {
+            background: #4a4a5a;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 60px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #e0e0e0;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2a2a3a;
+            transition: 0.08s linear;
+            border: 1px solid #6a6a7a;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-secondary:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #2a2a3a;
+        }
+        .btn-secondary:hover {
+            background: #5a5a6a;
+        }
+
+        .request-btn {
+            background: #7a5a3a;
+            box-shadow: 0 5px 0 #4a3a2a;
+            border-color: #9a7a5a;
+            transition: 0.2s;
+            margin-top: 0;
+        }
+        .request-btn:hover {
+            background: #8a6a4a;
+        }
+        .request-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #4a3a2a;
+        }
+
+        .btn-reset {
+            background: #3a4a4a;
+            border-color: #5a6a6a;
+            box-shadow: 0 5px 0 #2a3a3a;
+            margin-top: 0;
+            font-size: 14px;
+        }
+        .btn-reset:hover {
+            background: #4a5a5a;
+        }
+        .btn-reset:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #2a3a3a;
+        }
+
+        .validation-msg {
+            color: #f77;
+            font-size: 12px;
+            margin: 2px 0 0 6px;
+            min-height: 18px;
+            font-weight: 400;
+        }
+        .validation-msg.success {
+            color: #7c7;
+        }
+
+        /* ----- MODAL ----- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.78);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 12px;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1e1e1e;
+            border-radius: 28px;
+            padding: 20px 22px;
+            width: 620px;
+            max-width: 100%;
+            max-height: 92vh;
+            overflow-y: auto;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+            color: #e0e0e0;
+        }
+        .modal h2 {
+            text-align: center;
+            color: #b0b0b0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            font-size: 20px;
+        }
+        .modal label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 3px;
+            font-weight: 500;
+            color: #aaa;
+            font-size: 13px;
+        }
+        .modal input,
+        .modal select,
+        .modal textarea {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0f0f0f;
+            border: 1px solid #3a3a3a;
+            border-radius: 30px;
+            color: #f0f0f0;
+            font-size: 14px;
+            outline: none;
+            transition: 0.15s;
+            font-family: inherit;
+        }
+        .modal input:focus,
+        .modal select:focus,
+        .modal textarea:focus {
+            border-color: #5a8a5a;
+            box-shadow: 0 0 0 2px #2a5a2a;
+        }
+        .modal .inline-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .modal .inline-group>div {
+            flex: 1;
+            min-width: 100px;
+        }
+        .modal .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .modal .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #3a6b3a;
+            cursor: pointer;
+        }
+        .modal .checkbox-group label {
+            margin: 0;
+            font-weight: 300;
+            color: #b0b0b0;
+            font-size: 13px;
+        }
+        .modal .term-text {
+            background: #141414;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border-left: 3px solid #5a8a5a;
+            margin: 10px 0;
+            font-size: 13px;
+            color: #d0d0d0;
+            line-height: 1.6;
+        }
+        .modal .term-text strong {
+            color: #b5f0a0;
+        }
+        .modal .error-msg {
+            color: #f77;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+        .modal .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .modal .btn-row .btn-primary {
+            flex: 2;
+        }
+        .modal .btn-row .btn-secondary {
+            flex: 1;
+        }
+
+        .summary-card {
+            background: #1f3f1f;
+            border: 1px solid #5a8a5a;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 14px;
+            font-size: 13px;
+            color: #b5f0a0;
+            line-height: 1.6;
+        }
+        .summary-card strong {
+            color: #d0f0c0;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid #3a3a3a;
+            border-top: 3px solid #8a8a8a;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #dietResult {
+            background: #0d0d0d;
+            padding: 14px;
+            border-radius: 18px;
+            margin-top: 14px;
+            max-height: 240px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #c7e9c0;
+            border: 1px solid #2a2a2a;
+        }
+
+        .success-msg {
+            background: #1f3f1f;
+            border: 1px solid #5a8a5a;
+            color: #b5f0a0;
+            padding: 16px 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .success-msg .close-btn {
+            background: transparent;
+            border: none;
+            color: #b5f0a0;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0 6px;
+            line-height: 1;
+            opacity: 0.7;
+            transition: 0.15s;
+        }
+        .success-msg .close-btn:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        /* ----- RESPONSIVENESS ----- */
+        @media (max-width: 640px) {
+            .calculator {
+                padding: 14px 12px 18px;
+            }
+            .calculator-title {
+                font-size: 17px;
+            }
+            .display {
+                padding: 10px 12px;
+            }
+            .display .result-row {
+                font-size: 11px;
+                padding: 2px 0;
+            }
+            .display .result-value {
+                font-size: 12px;
+                min-width: 45px;
+                padding: 1px 6px;
+            }
+            .row-group .field {
+                flex: 1 1 55px;
+                padding: 3px 8px;
+                min-width: 48px;
+            }
+            .row-group .field input,
+            .row-group .field select {
+                font-size: 12px;
+                padding: 4px 4px;
+                min-width: 18px;
+            }
+            .row-group .field label {
+                font-size: 10px;
+            }
+            .row-group .field .unit {
+                font-size: 10px;
+            }
+            .bmi-pill {
+                padding: 2px 8px;
+                min-width: 48px;
+                font-size: 11px;
+            }
+            .bmi-pill .bmi-value {
+                font-size: 13px;
+            }
+            .bmi-pill .bmi-label {
+                font-size: 8px;
+            }
+            .unit-toggle button {
+                padding: 3px 8px;
+                font-size: 10px;
+            }
+            .btn-primary,
+            .btn-secondary {
+                font-size: 13px;
+                padding: 10px 12px;
+                box-shadow: 0 4px 0 #1f3f1f;
+            }
+            .btn-primary:active,
+            .btn-secondary:active {
+                transform: translateY(2px);
+                box-shadow: 0 2px 0 #1f3f1f;
+            }
+            .modal {
+                padding: 16px;
+            }
+            .modal h2 {
+                font-size: 17px;
+            }
+            .modal .btn-row {
+                flex-direction: column;
+            }
+            .modal .inline-group {
+                flex-direction: column;
+            }
+            .chart-container {
+                margin-top: 6px;
+            }
+            #macroChart {
+                width: 80px;
+                height: 80px;
+            }
+            .bmi-scale {
+                height: 10px;
+            }
+            .bmi-marker {
+                font-size: 14px;
+                top: -8px;
+            }
+            .bmi-labels {
+                font-size: 9px;
+            }
+            .summary-card {
+                font-size: 12px;
+                padding: 10px;
+            }
+            .btn-reset {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            .request-btn {
+                font-size: 13px;
+                padding: 10px 12px;
+            }
+            .success-msg {
+                font-size: 13px;
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .row-group .field {
+                flex: 1 1 40px;
+                min-width: 38px;
+                padding: 2px 6px;
+            }
+            .row-group .field input {
+                font-size: 11px;
+                min-width: 16px;
+                padding: 3px 3px;
+            }
+            .bmi-pill {
+                min-width: 38px;
+                padding: 1px 6px;
+                font-size: 10px;
+            }
+            .bmi-pill .bmi-value {
+                font-size: 11px;
+            }
+            .display .result-row {
+                font-size: 10px;
+            }
+            .display .result-value {
+                font-size: 11px;
+                min-width: 32px;
+                padding: 1px 4px;
+            }
+            .btn-primary,
+            .btn-secondary {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            .request-btn {
+                font-size: 12px;
+                padding: 8px 10px;
+            }
+            .unit-toggle button {
+                padding: 2px 6px;
+                font-size: 9px;
+            }
+            .modal .summary-card {
+                font-size: 11px;
+                padding: 8px;
+            }
+        }
+
+        /* Scrollbar styling for modal */
+        .modal::-webkit-scrollbar {
+            width: 5px;
+        }
+        .modal::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+        .modal::-webkit-scrollbar-thumb {
+            background: #3a6b3a;
+            border-radius: 10px;
+        }
+        .modal::-webkit-scrollbar-thumb:hover {
+            background: #4a8a4a;
+        }
+
+        /* Tooltip style */
+        [title] {
+            position: relative;
+            cursor: help;
+        }
+        [title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0d0d0d;
+            color: #ddd;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 400;
+            white-space: nowrap;
+            max-width: 260px;
+            white-space: normal;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            pointer-events: none;
+            font-family: 'Segoe UI', sans-serif;
+            text-transform: none;
+            letter-spacing: 0.3px;
+            line-height: 1.4;
+        }
+        [title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: calc(100% + 2px);
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #0d0d0d;
+            z-index: 100;
+            pointer-events: none;
+        }
+        @media (hover: none) {
+            [title]:hover::after,
+            [title]:hover::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <div class="calculator-title">⚡ Smart Nutrition Calculator</div>
+
+        <!-- DISPLAY -->
+        <div class="display">
+            <div class="result-row highlight">
+                <span class="result-label">🎯 Goal Target Weight</span>
+                <span class="result-value" id="targetWeightDisplay">—</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">1. Calories (kcal/day)</span>
+                <span class="result-value" id="calories">—</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">2. Protein (g/day)</span>
+                <span class="result-value" id="protein">—</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">3. Fat (g/day)</span>
+                <span class="result-value" id="fat">—</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">4. Fiber (g/day)</span>
+                <span class="result-value" id="fiber">—</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">5. Carbs (g/day)</span>
+                <span class="result-value" id="carbs">—</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">6. Water (L/day)</span>
+                <span class="result-value" id="water">—</span>
+            </div>
+
+            <!-- BMI Scale -->
+            <div class="bmi-scale-container">
+                <div class="bmi-scale" id="bmiScale">
+                    <span class="bmi-marker" id="bmiMarker">▼</span>
+                </div>
+                <div class="bmi-labels">
+                    <span>Underweight</span>
+                    <span>Normal</span>
+                    <span>Overweight</span>
+                    <span>Obese</span>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="macroChart" width="120" height="120"></canvas>
+            </div>
+        </div>
+
+        <!-- INPUT AREA -->
+        <div class="input-area">
+
+            <!-- Row 1: Weight, Age, Gender -->
+            <div class="row-group">
+                <div class="field">
+                    <label for="weight">Wt</label>
+                    <input type="number" id="weight" placeholder="70" step="0.1" min="1" />
+                    <span id="weightUnit" class="unit">kg</span>
+                </div>
+                <div class="field">
+                    <label for="age">Age</label>
+                    <input type="number" id="age" placeholder="30" min="1" max="120" />
+                </div>
+                <div class="field" style="flex:1.2;">
+                    <label for="gender">Gender</label>
+                    <select id="gender">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 2: Height, BMI, Unit toggle -->
+            <div class="row-group">
+                <div class="field">
+                    <label for="heightMain">Ht</label>
+                    <input type="number" id="heightMain" placeholder="175" step="0.1" min="1" />
+                    <span id="heightUnitMain" class="unit">cm</span>
+                </div>
+                <div class="bmi-pill" id="bmiPill">
+                    <span class="bmi-label">BMI</span>
+                    <span class="bmi-value unknown" id="bmiMainValue">—</span>
+                </div>
+                <div class="unit-toggle">
+                    <button id="unitMetric" class="active">Metric</button>
+                    <button id="unitImperial">Imperial</button>
+                </div>
+            </div>
+
+            <!-- Row 3: Pregnancy (shown only for female) -->
+            <div class="row-group" id="pregnancyGroup" style="display: none;">
+                <div class="field" style="flex:1;">
+                    <label for="pregnant">Pregnant?</label>
+                    <select id="pregnant">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+                <div class="field" style="flex:1;" id="trimesterGroup">
+                    <label for="trimester">Trimester</label>
+                    <select id="trimester">
+                        <option value="1">1st</option>
+                        <option value="2" selected>2nd</option>
+                        <option value="3">3rd</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 4: Goal & Activity -->
+            <div class="row-group">
+                <div class="field" style="flex:1.5;">
+                    <label for="goal" title="Choose your primary nutrition goal">Goal</label>
+                    <select id="goal">
+                        <option value="maintain">Maintain weight</option>
+                        <option value="bmi">Match normal BMI</option>
+                        <option value="gain">Gain weight</option>
+                        <option value="loss">Lose weight</option>
+                    </select>
+                </div>
+                <div class="field" style="flex:1;">
+                    <label for="activity" title="How much do you exercise per week? Sedentary=office job, Light=1-3 days, Moderate=3-5 days, Active=6-7 days, Very Active=2x daily">Activity</label>
+                    <select id="activity">
+                        <option value="1.2">Sedentary</option>
+                        <option value="1.375" selected>Light</option>
+                        <option value="1.55">Moderate</option>
+                        <option value="1.725">Active</option>
+                        <option value="1.9">Very Active</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Goal target fields (dynamic) -->
+            <div id="goalTargetFields" class="goal-target-fields">
+                <div class="field" style="flex:1.2;">
+                    <label id="targetLabel" for="targetWeight">Target Weight</label>
+                    <input type="number" id="targetWeight" placeholder="75" step="0.1" min="1" />
+                    <span id="targetUnit" class="unit">kg</span>
+                </div>
+                <div class="field" style="flex:0.8;" id="timeField">
+                    <label for="timeWeeks">Weeks</label>
+                    <input type="number" id="timeWeeks" placeholder="8" step="1" min="1" />
+                </div>
+            </div>
+
+            <div id="goalValidation" class="validation-msg"></div>
+
+            <!-- Buttons: Calculate + Reset -->
+            <button class="btn-primary" id="calculateBtn">🧮 Calculate Nutrients</button>
+
+            <div style="display: flex; gap: 8px; width: 100%;">
+                <button class="btn-secondary btn-reset" id="resetBtn" style="flex:0.8;">↻ Reset</button>
+                <button class="btn-primary request-btn" id="requestDietBtn" style="flex:2.2;">
+                    📋 Request Diet Plan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="dietModal">
+        <div class="modal">
+            <h2>📋 Request Diet Plan</h2>
+
+            <!-- Summary card (injected by JS) -->
+            <div id="summaryCardContainer"></div>
+
+            <label for="fullName">Full Name *</label>
+            <input type="text" id="fullName" placeholder="e.g. John Doe" />
+
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" placeholder="john@example.com" />
+
+            <label for="notes">Additional Notes (diseases, medications, etc.)</label>
+            <textarea id="notes" rows="3" placeholder="e.g. I have type 2 diabetes, taking metformin..."></textarea>
+
+            <div class="term-text">
+                <strong>Terms & Conditions:</strong> This diet plan is generated by AI based on the information you provided. The nutrient calculations (calories, protein, fat, carbs, etc.) are derived using standard mathematical formulas. This plan is for informational purposes only and does not replace professional medical advice. Always consult a healthcare provider before starting any diet.
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="agreeTerms" />
+                <label for="agreeTerms">I agree to the terms and conditions *</label>
+            </div>
+            <div id="termsError" class="error-msg hidden">You must agree to the terms.</div>
+
+            <div id="dietResult" class="hidden"></div>
+
+            <div class="btn-row">
+                <button class="btn-secondary" id="closeModalBtn">Close</button>
+                <button class="btn-primary" id="requestDietBtnModal">📥 Request Diet Plan</button>
+            </div>
+            <div id="loadingIndicator" class="hidden" style="text-align:center; margin-top:10px;">
+                <span class="spinner"></span> Generating your plan...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            "use strict";
+
+            // --------------------------------------------------------------
+            // 1. DOM refs
+            // --------------------------------------------------------------
+            const weightInput = document.getElementById('weight');
+            const ageInput = document.getElementById('age');
+            const genderSelect = document.getElementById('gender');
+            const heightMainInput = document.getElementById('heightMain');
+            const goalSelect = document.getElementById('goal');
+            const activitySelect = document.getElementById('activity');
+            const targetWeightInput = document.getElementById('targetWeight');
+            const timeWeeksInput = document.getElementById('timeWeeks');
+            const goalTargetFields = document.getElementById('goalTargetFields');
+            const targetLabel = document.getElementById('targetLabel');
+            const targetUnit = document.getElementById('targetUnit');
+            const timeField = document.getElementById('timeField');
+            const goalValidation = document.getElementById('goalValidation');
+
+            const pregnantSelect = document.getElementById('pregnant');
+            const trimesterSelect = document.getElementById('trimester');
+            const pregnancyGroup = document.getElementById('pregnancyGroup');
+
+            const calculateBtn = document.getElementById('calculateBtn');
+            const requestDietBtn = document.getElementById('requestDietBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            const caloriesSpan = document.getElementById('calories');
+            const proteinSpan = document.getElementById('protein');
+            const fatSpan = document.getElementById('fat');
+            const fiberSpan = document.getElementById('fiber');
+            const carbsSpan = document.getElementById('carbs');
+            const waterSpan = document.getElementById('water');
+            const targetWeightDisplay = document.getElementById('targetWeightDisplay');
+
+            const bmiMainValue = document.getElementById('bmiMainValue');
+            const bmiPill = document.getElementById('bmiPill');
+            const bmiMarker = document.getElementById('bmiMarker');
+
+            const weightUnitSpan = document.getElementById('weightUnit');
+            const heightUnitMain = document.getElementById('heightUnitMain');
+
+            const unitMetricBtn = document.getElementById('unitMetric');
+            const unitImperialBtn = document.getElementById('unitImperial');
+
+            const macroCanvas = document.getElementById('macroChart');
+            const ctx = macroCanvas.getContext('2d');
+
+            // Modal refs
+            const modalOverlay = document.getElementById('dietModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const requestDietBtnModal = document.getElementById('requestDietBtnModal');
+            const fullName = document.getElementById('fullName');
+            const email = document.getElementById('email');
+            const notes = document.getElementById('notes');
+            const agreeTerms = document.getElementById('agreeTerms');
+            const termsError = document.getElementById('termsError');
+            const dietResult = document.getElementById('dietResult');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const summaryCardContainer = document.getElementById('summaryCardContainer');
+
+            // --------------------------------------------------------------
+            // 2. State
+            // --------------------------------------------------------------
+            let currentWeightKg = null;
+            let currentHeightCm = null;
+            let currentAge = null;
+            let currentGender = 'male';
+            let currentGoal = 'maintain';
+            let currentActivity = 1.375;
+            let currentTargetKg = null;
+            let currentTimeWeeks = null;
+            let currentNutrition = null;
+            let unitSystem = 'metric';
+            let debounceTimer = null;
+            let hasCalculated = false;
+            let isPregnant = false;
+            let trimester = 2;
+
+            // --------------------------------------------------------------
+            // 3. Core calculation engine
+            // --------------------------------------------------------------
+
+            function computeBMI(weightKg, heightCm) {
+                if (!weightKg || !heightCm || heightCm <= 0) return null;
+                const heightM = heightCm / 100;
+                return weightKg / (heightM * heightM);
+            }
+
+            function getBMICategory(bmi) {
+                if (bmi === null) return '—';
+                if (bmi < 18.5) return 'Underweight';
+                if (bmi < 25) return 'Normal';
+                if (bmi < 30) return 'Overweight';
+                return 'Obese';
+            }
+
+            function getBMIColor(bmi) {
+                if (bmi === null) return '#3a3a3a';
+                if (bmi < 18.5) return '#4a90e2';
+                if (bmi < 25) return '#50e3c2';
+                if (bmi < 30) return '#f5a623';
+                return '#d0021b';
+            }
+
+            function calculateTarget() {
+                const weightKg = currentWeightKg;
+                const heightCm = currentHeightCm;
+                const goal = currentGoal;
+                const targetInput = parseFloat(targetWeightInput.value);
+                const timeInput = parseFloat(timeWeeksInput.value);
+
+                let target = null;
+                let weeks = null;
+                let message = '';
+                let valid = false;
+
+                if (!weightKg || weightKg <= 0) {
+                    return { target: null, weeks: null, message: 'Enter a valid weight first.', valid: false };
+                }
+
+                switch (goal) {
+                    case 'maintain': {
+                        if (isNaN(targetInput) || targetInput <= 0) {
+                            target = weightKg;
+                            message = `Maintaining current weight: ${weightKg.toFixed(1)} kg`;
+                        } else {
+                            target = targetInput;
+                            const diff = target - weightKg;
+                            if (Math.abs(diff) < 0.1) {
+                                message = `Maintaining current weight: ${weightKg.toFixed(1)} kg`;
+                            } else if (diff > 0) {
+                                message = `Maintaining at ${target.toFixed(1)} kg (gain ${diff.toFixed(1)} kg)`;
+                            } else {
+                                message = `Maintaining at ${target.toFixed(1)} kg (loss ${Math.abs(diff).toFixed(1)} kg)`;
+                            }
+                        }
+                        weeks = null;
+                        valid = true;
+                        break;
+                    }
+
+                    case 'bmi': {
+                        if (!heightCm || heightCm <= 0) {
+                            return { target: null, weeks: null, message: 'Enter height to calculate BMI target.',
+                                valid: false };
+                        }
+                        const heightM = heightCm / 100;
+                        const bmi = computeBMI(weightKg, heightCm);
+                        const targetBMI = 22;
+                        target = targetBMI * (heightM * heightM);
+                        const currentBMI = bmi || 0;
+                        if (currentBMI >= 18.5 && currentBMI <= 24.9) {
+                            message =
+                                `BMI is already normal (${currentBMI.toFixed(1)}). Target: ${target.toFixed(1)} kg (BMI 22)`;
+                        } else {
+                            message =
+                                `Current BMI: ${currentBMI.toFixed(1)}. Target BMI 22 → ${target.toFixed(1)} kg`;
+                        }
+                        weeks = null;
+                        valid = true;
+                        break;
+                    }
+
+                    case 'gain': {
+                        if (isNaN(targetInput) || targetInput <= 0) {
+                            return { target: null, weeks: null, message: 'Please enter a target weight for gain.',
+                                valid: false };
+                        }
+                        if (targetInput <= weightKg) {
+                            return { target: null, weeks: null,
+                                message: `Target (${targetInput.toFixed(1)} kg) must be > current (${weightKg.toFixed(1)} kg)`,
+                                valid: false };
+                        }
+                        if (isNaN(timeInput) || timeInput <= 0) {
+                            return { target: null, weeks: null, message: 'Please enter time period in weeks.',
+                                valid: false };
+                        }
+                        target = targetInput;
+                        weeks = timeInput;
+                        const gain = target - weightKg;
+                        const weeklyRate = gain / weeks;
+                        message =
+                            `Gain ${gain.toFixed(1)} kg in ${weeks} weeks (${weeklyRate.toFixed(2)} kg/week)`;
+                        valid = true;
+                        break;
+                    }
+
+                    case 'loss': {
+                        if (isNaN(targetInput) || targetInput <= 0) {
+                            return { target: null, weeks: null, message: 'Please enter a target weight for loss.',
+                                valid: false };
+                        }
+                        if (targetInput >= weightKg) {
+                            return { target: null, weeks: null,
+                                message: `Target (${targetInput.toFixed(1)} kg) must be < current (${weightKg.toFixed(1)} kg)`,
+                                valid: false };
+                        }
+                        if (isNaN(timeInput) || timeInput <= 0) {
+                            return { target: null, weeks: null, message: 'Please enter time period in weeks.',
+                                valid: false };
+                        }
+                        target = targetInput;
+                        weeks = timeInput;
+                        const loss = weightKg - target;
+                        const weeklyRate = loss / weeks;
+                        message =
+                            `Lose ${loss.toFixed(1)} kg in ${weeks} weeks (${weeklyRate.toFixed(2)} kg/week)`;
+                        valid = true;
+                        break;
+                    }
+
+                    default: {
+                        return { target: null, weeks: null, message: 'Unknown goal.', valid: false };
+                    }
+                }
+
+                if (target !== null && target < 20) target = 20;
+                if (target !== null && target > 400) target = 400;
+
+                return { target, weeks, message, valid };
+            }
+
+            function calculateNutrition(weightKg, targetKg, weeks, goal, activity, age, gender) {
+                // Base BMR (Mifflin-St Jeor)
+                let bmr;
+                if (gender === 'male') {
+                    bmr = 10 * weightKg + 6.25 * (currentHeightCm || 170) - 5 * (age || 30) + 5;
+                } else {
+                    bmr = 10 * weightKg + 6.25 * (currentHeightCm || 170) - 5 * (age || 30) - 161;
+                }
+                bmr = Math.max(800, bmr);
+
+                let maintenance = bmr * activity;
+
+                // Pregnancy adjustments
+                let pregnancyCalories = 0;
+                let pregnancyProtein = 0;
+                if (isPregnant && gender === 'female') {
+                    const tri = parseInt(trimesterSelect.value);
+                    if (tri === 1) { pregnancyCalories = 0;
+                        pregnancyProtein = 0; } else if (tri === 2) { pregnancyCalories = 340;
+                        pregnancyProtein = 25; } else if (tri === 3) { pregnancyCalories = 450;
+                        pregnancyProtein = 25; }
+                }
+
+                maintenance += pregnancyCalories;
+
+                let calorieTarget = maintenance;
+                let deficitSurplus = 0;
+
+                if (goal === 'gain' && targetKg && weeks && targetKg > weightKg) {
+                    const totalGain = targetKg - weightKg;
+                    const totalSurplus = totalGain * 7700;
+                    const dailySurplus = totalSurplus / (weeks * 7);
+                    const cappedSurplus = Math.min(1000, Math.max(100, dailySurplus));
+                    calorieTarget = maintenance + cappedSurplus;
+                    deficitSurplus = cappedSurplus;
+                } else if (goal === 'loss' && targetKg && weeks && targetKg < weightKg) {
+                    const totalLoss = weightKg - targetKg;
+                    const totalDeficit = totalLoss * 7700;
+                    const dailyDeficit = totalDeficit / (weeks * 7);
+                    const cappedDeficit = Math.min(1000, Math.max(300, dailyDeficit));
+                    calorieTarget = maintenance - cappedDeficit;
+                    deficitSurplus = -cappedDeficit;
+                } else if (goal === 'bmi' && targetKg) {
+                    const diff = targetKg - weightKg;
+                    if (Math.abs(diff) > 1) {
+                        const weeksEst = 12;
+                        const dailyAdjust = (diff * 7700) / (weeksEst * 7);
+                        const cappedAdjust = Math.min(500, Math.max(-500, dailyAdjust));
+                        calorieTarget = maintenance + cappedAdjust;
+                        deficitSurplus = cappedAdjust;
+                    } else {
+                        calorieTarget = maintenance;
+                    }
+                } else {
+                    calorieTarget = maintenance;
+                }
+
+                calorieTarget = Math.max(1000, Math.min(4000, calorieTarget));
+
+                let protein = weightKg * 2.0;
+                protein += pregnancyProtein;
+
+                const fat = calorieTarget / 30;
+                const fiber = calorieTarget * 0.014;
+                let carbs = (calorieTarget - protein * 4 - fat * 9) / 4;
+
+                // Improved water calculation: base 35ml/kg + activity bonus
+                const baseWater = weightKg * 0.035;
+                const activityBonus = Math.max(0, (currentActivity - 1.2) * 0.6);
+                const water = Math.max(1.5, baseWater + activityBonus);
+
+                return {
+                    calories: calorieTarget,
+                    protein: Math.max(protein, 30),
+                    fat: Math.max(fat, 15),
+                    fiber: Math.max(fiber, 10),
+                    carbs: Math.max(carbs, 20),
+                    water: water,
+                    maintenance: maintenance,
+                    deficitSurplus: deficitSurplus,
+                    bmr: bmr,
+                    targetWeight: targetKg,
+                    timeWeeks: weeks,
+                    pregnancyCalories: pregnancyCalories,
+                    pregnancyProtein: pregnancyProtein
+                };
+            }
+
+            // --------------------------------------------------------------
+            // 4. Main calculate action
+            // --------------------------------------------------------------
+            function performCalculation() {
+                let rawWeight = parseFloat(weightInput.value);
+                if (isNaN(rawWeight) || rawWeight <= 0) {
+                    alert('Please enter a valid weight.');
+                    return null;
+                }
+                let weightKg = rawWeight;
+                if (unitSystem === 'imperial') {
+                    weightKg = rawWeight / 2.20462;
+                }
+                currentWeightKg = weightKg;
+
+                let rawHeight = parseFloat(heightMainInput.value);
+                if (!isNaN(rawHeight) && rawHeight > 0) {
+                    let heightCm = rawHeight;
+                    if (unitSystem === 'imperial') {
+                        heightCm = rawHeight * 2.54;
+                    }
+                    currentHeightCm = heightCm;
+                } else {
+                    currentHeightCm = null;
+                }
+
+                currentAge = parseInt(ageInput.value) || 30;
+                currentGender = genderSelect.value;
+                currentGoal = goalSelect.value;
+                currentActivity = parseFloat(activitySelect.value);
+
+                isPregnant = pregnantSelect.value === 'yes';
+                trimester = parseInt(trimesterSelect.value);
+
+                const targetResult = calculateTarget();
+                if (!targetResult.valid) {
+                    goalValidation.textContent = targetResult.message;
+                    goalValidation.className = 'validation-msg';
+                    return null;
+                }
+
+                currentTargetKg = targetResult.target;
+                currentTimeWeeks = targetResult.weeks;
+
+                goalValidation.textContent = targetResult.message;
+                goalValidation.className = 'validation-msg success';
+
+                if (currentTargetKg !== null) {
+                    const unit = unitSystem === 'metric' ? 'kg' : 'lbs';
+                    const displayVal = unitSystem === 'metric' ? currentTargetKg : currentTargetKg * 2.20462;
+                    targetWeightDisplay.textContent = displayVal.toFixed(1) + ' ' + unit;
+                } else {
+                    targetWeightDisplay.textContent = '—';
+                }
+
+                const nutrition = calculateNutrition(
+                    currentWeightKg,
+                    currentTargetKg,
+                    currentTimeWeeks,
+                    currentGoal,
+                    currentActivity,
+                    currentAge,
+                    currentGender
+                );
+                currentNutrition = nutrition;
+                hasCalculated = true;
+
+                caloriesSpan.textContent = nutrition.calories.toFixed(1);
+                proteinSpan.textContent = nutrition.protein.toFixed(1);
+                fatSpan.textContent = nutrition.fat.toFixed(1);
+                fiberSpan.textContent = nutrition.fiber.toFixed(1);
+                carbsSpan.textContent = nutrition.carbs.toFixed(1);
+                waterSpan.textContent = nutrition.water.toFixed(2);
+
+                drawMacroChart(nutrition);
+                updateBMIDisplay();
+                saveState();
+
+                return nutrition;
+            }
+
+            // --------------------------------------------------------------
+            // 5. BMI display & scale
+            // --------------------------------------------------------------
+            function updateBMIDisplay() {
+                const bmi = computeBMI(currentWeightKg, currentHeightCm);
+                if (bmi !== null && isFinite(bmi) && bmi > 0) {
+                    bmiMainValue.textContent = bmi.toFixed(1);
+                    bmiMainValue.className = 'bmi-value';
+                    bmiPill.style.borderColor = getBMIColor(bmi);
+
+                    let percent = (bmi / 40) * 100;
+                    percent = Math.min(95, Math.max(5, percent));
+                    bmiMarker.style.left = percent + '%';
+                } else {
+                    bmiMainValue.textContent = '—';
+                    bmiMainValue.className = 'bmi-value unknown';
+                    bmiPill.style.borderColor = '#3a3a3a';
+                    bmiMarker.style.left = '0%';
+                }
+            }
+
+            function debouncedUpdateBMI() {
+                if (debounceTimer) clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    let w = parseFloat(weightInput.value);
+                    let h = parseFloat(heightMainInput.value);
+                    if (!isNaN(w) && w > 0) {
+                        if (unitSystem === 'imperial') w = w / 2.20462;
+                        currentWeightKg = w;
+                    } else {
+                        currentWeightKg = null;
+                    }
+                    if (!isNaN(h) && h > 0) {
+                        if (unitSystem === 'imperial') h = h * 2.54;
+                        currentHeightCm = h;
+                    } else {
+                        currentHeightCm = null;
+                    }
+                    updateBMIDisplay();
+                    if (currentWeightKg) {
+                        const result = calculateTarget();
+                        if (result.valid) {
+                            goalValidation.textContent = result.message;
+                            goalValidation.className = 'validation-msg success';
+                        }
+                    }
+                    saveState();
+                    debounceTimer = null;
+                }, 250);
+            }
+
+            weightInput.addEventListener('input', debouncedUpdateBMI);
+            heightMainInput.addEventListener('input', debouncedUpdateBMI);
+
+            // --------------------------------------------------------------
+            // 6. Goal UI logic
+            // --------------------------------------------------------------
+            function updateGoalFields() {
+                const goal = goalSelect.value;
+                if (goal === 'maintain') {
+                    goalTargetFields.classList.add('visible');
+                    targetLabel.textContent = 'Target Weight';
+                    timeField.style.display = 'none';
+                    targetWeightInput.placeholder = '(optional)';
+                } else if (goal === 'bmi') {
+                    goalTargetFields.classList.add('visible');
+                    targetLabel.textContent = 'Target (auto)';
+                    timeField.style.display = 'none';
+                    targetWeightInput.placeholder = 'Auto-calculated';
+                    targetWeightInput.disabled = true;
+                } else if (goal === 'gain' || goal === 'loss') {
+                    goalTargetFields.classList.add('visible');
+                    targetLabel.textContent = 'Target Weight';
+                    timeField.style.display = 'block';
+                    targetWeightInput.placeholder = 'e.g. 75';
+                    targetWeightInput.disabled = false;
+                } else {
+                    goalTargetFields.classList.remove('visible');
+                }
+
+                if (currentWeightKg) {
+                    const result = calculateTarget();
+                    if (result.valid) {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg success';
+                        if (result.target !== null && goal === 'bmi') {
+                            const val = unitSystem === 'metric' ? result.target : result.target * 2.20462;
+                            targetWeightInput.value = val.toFixed(1);
+                            targetWeightInput.disabled = true;
+                        } else if (goal === 'bmi') {
+                            targetWeightInput.disabled = true;
+                        } else {
+                            targetWeightInput.disabled = false;
+                        }
+                    } else {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg';
+                    }
+                }
+                saveState();
+            }
+
+            goalSelect.addEventListener('change', updateGoalFields);
+            targetWeightInput.addEventListener('input', function() {
+                if (currentWeightKg) {
+                    const result = calculateTarget();
+                    if (result.valid) {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg success';
+                    } else {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg';
+                    }
+                }
+                saveState();
+            });
+            timeWeeksInput.addEventListener('input', function() {
+                if (currentWeightKg) {
+                    const result = calculateTarget();
+                    if (result.valid) {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg success';
+                    } else {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg';
+                    }
+                }
+                saveState();
+            });
+
+            // --------------------------------------------------------------
+            // 7. Pregnancy toggle
+            // --------------------------------------------------------------
+            genderSelect.addEventListener('change', function() {
+                if (genderSelect.value === 'female') {
+                    pregnancyGroup.style.display = 'flex';
+                } else {
+                    pregnancyGroup.style.display = 'none';
+                    pregnantSelect.value = 'no';
+                }
+                saveState();
+            });
+
+            // --------------------------------------------------------------
+            // 8. Pie chart with legend
+            // --------------------------------------------------------------
+            function drawMacroChart(nutrition) {
+                const w = macroCanvas.width;
+                const h = macroCanvas.height;
+                ctx.clearRect(0, 0, w, h);
+                if (!nutrition) return;
+
+                const protein = nutrition.protein;
+                const fat = nutrition.fat;
+                const carbs = nutrition.carbs;
+                const total = protein + fat + carbs;
+                if (total === 0) return;
+
+                const colors = ['#5a8a5a', '#c7b04a', '#b05a5a'];
+                const labels = ['Protein', 'Fat', 'Carbs'];
+                const data = [protein, fat, carbs];
+                let startAngle = -Math.PI / 2;
+                const radius = Math.min(w, h) / 2 - 6;
+                const cx = w / 2;
+                const cy = h / 2;
+
+                data.forEach((val, i) => {
+                    const slice = (val / total) * 2 * Math.PI;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, radius, startAngle, startAngle + slice);
+                    ctx.closePath();
+                    ctx.fillStyle = colors[i];
+                    ctx.fill();
+                    ctx.strokeStyle = '#0d0d0d';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    startAngle += slice;
+                });
+
+                ctx.font = 'bold 11px "Segoe UI", sans-serif';
+                const lineHeight = 14;
+                data.forEach((val, i) => {
+                    const pct = ((val / total) * 100).toFixed(0);
+                    ctx.fillStyle = colors[i];
+                    ctx.fillRect(2, 2 + i * lineHeight, 8, 8);
+                    ctx.fillStyle = '#aaa';
+                    ctx.font = '10px "Segoe UI", sans-serif';
+                    ctx.fillText(`${labels[i]} ${pct}%`, 14, 10 + i * lineHeight);
+                });
+            }
+
+            // --------------------------------------------------------------
+            // 9. Unit toggle
+            // --------------------------------------------------------------
+            function setUnitSystem(system) {
+                unitSystem = system;
+                if (system === 'metric') {
+                    unitMetricBtn.classList.add('active');
+                    unitImperialBtn.classList.remove('active');
+                    weightUnitSpan.textContent = 'kg';
+                    heightUnitMain.textContent = 'cm';
+                    targetUnit.textContent = 'kg';
+                    weightInput.placeholder = '70';
+                    heightMainInput.placeholder = '175';
+                } else {
+                    unitImperialBtn.classList.add('active');
+                    unitMetricBtn.classList.remove('active');
+                    weightUnitSpan.textContent = 'lbs';
+                    heightUnitMain.textContent = 'in';
+                    targetUnit.textContent = 'lbs';
+                    weightInput.placeholder = '154';
+                    heightMainInput.placeholder = '69';
+                }
+                if (weightInput.value) {
+                    let val = parseFloat(weightInput.value);
+                    if (!isNaN(val) && val > 0) debouncedUpdateBMI();
+                }
+                if (heightMainInput.value) {
+                    let val = parseFloat(heightMainInput.value);
+                    if (!isNaN(val) && val > 0) debouncedUpdateBMI();
+                }
+                if (hasCalculated && currentTargetKg !== null) {
+                    const displayVal = unitSystem === 'metric' ? currentTargetKg : currentTargetKg * 2.20462;
+                    targetWeightDisplay.textContent = displayVal.toFixed(1) + ' ' + (unitSystem === 'metric' ? 'kg' :
+                    'lbs');
+                }
+                if (currentWeightKg) {
+                    const result = calculateTarget();
+                    if (result.valid) {
+                        goalValidation.textContent = result.message;
+                        goalValidation.className = 'validation-msg success';
+                        if (result.target !== null && goalSelect.value === 'bmi') {
+                            const val = unitSystem === 'metric' ? result.target : result.target * 2.20462;
+                            targetWeightInput.value = val.toFixed(1);
+                        }
+                    }
+                }
+                saveState();
+            }
+
+            unitMetricBtn.addEventListener('click', () => setUnitSystem('metric'));
+            unitImperialBtn.addEventListener('click', () => setUnitSystem('imperial'));
+
+            // --------------------------------------------------------------
+            // 10. Email validation (kept for the form)
+            // --------------------------------------------------------------
+            function isValidEmail(emailStr) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+            }
+
+            function sanitizeFilename(name) {
+                return name.replace(/[^a-zA-Z0-9]/g, '_');
+            }
+
+            // --------------------------------------------------------------
+            // 11. Calculate button
+            // --------------------------------------------------------------
+            calculateBtn.addEventListener('click', performCalculation);
+
+            [weightInput, ageInput, heightMainInput, targetWeightInput, timeWeeksInput].forEach(el => {
+                el.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') performCalculation();
+                });
+            });
+
+            // --------------------------------------------------------------
+            // 12. Reset button
+            // --------------------------------------------------------------
+            resetBtn.addEventListener('click', function() {
+                // Clear all inputs
+                weightInput.value = '';
+                ageInput.value = '';
+                heightMainInput.value = '';
+                targetWeightInput.value = '';
+                timeWeeksInput.value = '';
+
+                // Clear results
+                caloriesSpan.textContent = '—';
+                proteinSpan.textContent = '—';
+                fatSpan.textContent = '—';
+                fiberSpan.textContent = '—';
+                carbsSpan.textContent = '—';
+                waterSpan.textContent = '—';
+                targetWeightDisplay.textContent = '—';
+                bmiMainValue.textContent = '—';
+                bmiMainValue.className = 'bmi-value unknown';
+                goalValidation.textContent = '';
+
+                // Reset state
+                hasCalculated = false;
+                currentWeightKg = null;
+                currentHeightCm = null;
+                currentNutrition = null;
+                currentTargetKg = null;
+
+                // Clear chart
+                ctx.clearRect(0, 0, macroCanvas.width, macroCanvas.height);
+                bmiMarker.style.left = '0%';
+
+                // Clear localStorage
+                localStorage.removeItem('nutritionCalcState');
+            });
+
+            // --------------------------------------------------------------
+            // 13. Modal
+            // --------------------------------------------------------------
+            function openModal() {
+                // VALIDATE: User must calculate nutrients first
+                if (!hasCalculated || !currentNutrition) {
+                    alert('⚠️ Please click "Calculate Nutrients" first to generate your nutrition plan.');
+                    return;
+                }
+
+                // Recalculate to ensure fresh data
+                performCalculation();
+
+                // Build summary card
+                const goalText = currentGoal === 'maintain' ? 'Maintain weight' :
+                    currentGoal === 'bmi' ? 'Match normal BMI' :
+                    currentGoal === 'gain' ? 'Gain weight' : 'Lose weight';
+
+                const targetDisplay = currentTargetKg !== null ?
+                    (unitSystem === 'metric' ? currentTargetKg.toFixed(1) + ' kg' : (currentTargetKg * 2.20462).toFixed(
+                        1) + ' lbs') :
+                    'N/A';
+
+                summaryCardContainer.innerHTML = `
+                    <div class="summary-card">
+                        <strong>📊 Your Plan Summary</strong><br>
+                        Weight: ${currentWeightKg.toFixed(1)} kg &nbsp;|&nbsp; Age: ${currentAge} &nbsp;|&nbsp; Goal: ${goalText}<br>
+                        Target: ${targetDisplay} &nbsp;|&nbsp; Activity: ${activitySelect.options[activitySelect.selectedIndex].text}<br>
+                        Calories: <strong>${caloriesSpan.textContent}</strong> kcal &nbsp;|&nbsp; Protein: <strong>${proteinSpan.textContent}</strong>g &nbsp;|&nbsp; Carbs: <strong>${carbsSpan.textContent}</strong>g
+                    </div>
+                `;
+
+                termsError.classList.add('hidden');
+                dietResult.classList.add('hidden');
+                dietResult.textContent = '';
+                loadingIndicator.classList.add('hidden');
+                modalOverlay.classList.add('active');
+            }
+
+            function closeModal() {
+                modalOverlay.classList.remove('active');
+            }
+
+            requestDietBtn.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) closeModal();
+            });
+
+            // --------------------------------------------------------------
+            // 14. DOWNLOAD TXT (Replaces Email API)
+            // --------------------------------------------------------------
+            requestDietBtnModal.addEventListener('click', function() {
+                const name = fullName.value.trim();
+                if (!name) {
+                    alert('Please enter your full name.');
+                    fullName.focus();
+                    return;
+                }
+                const emailVal = email.value.trim();
+                if (!emailVal || !isValidEmail(emailVal)) {
+                    alert('Please enter a valid email address.');
+                    email.focus();
+                    return;
+                }
+
+                if (!agreeTerms.checked) {
+                    termsError.classList.remove('hidden');
+                    return;
+                } else {
+                    termsError.classList.add('hidden');
+                }
+
+                const notesVal = notes.value.trim() || 'None';
+
+                const goalText = currentGoal === 'maintain' ? 'Maintain weight' :
+                    currentGoal === 'bmi' ? 'Match normal BMI' :
+                    currentGoal === 'gain' ? 'Gain weight' : 'Lose weight';
+
+                const cal = caloriesSpan.textContent;
+                const prot = proteinSpan.textContent;
+                const fatVal = fatSpan.textContent;
+                const fib = fiberSpan.textContent;
+                const carb = carbsSpan.textContent;
+                const wat = waterSpan.textContent;
+
+                const weightDisplay = currentWeightKg ? currentWeightKg.toFixed(1) + ' kg' : 'N/A';
+                const heightDisplay = currentHeightCm ?
+                    (unitSystem === 'metric' ? currentHeightCm.toFixed(1) + ' cm' : (currentHeightCm / 2.54).toFixed(
+                    1) + ' in') :
+                    'N/A';
+                const bmiVal = computeBMI(currentWeightKg, currentHeightCm);
+                const bmiStr = (bmiVal !== null && isFinite(bmiVal)) ?
+                    `${bmiVal.toFixed(1)} (${getBMICategory(bmiVal)})` :
+                    'N/A';
+                const activityText = activitySelect.options[activitySelect.selectedIndex].text;
+                const targetDisplay = currentTargetKg !== null ?
+                    (unitSystem === 'metric' ? currentTargetKg.toFixed(1) + ' kg' : (currentTargetKg * 2.20462).toFixed(
+                        1) + ' lbs') :
+                    'N/A';
+
+                const pregnantText = pregnantSelect.value === 'yes' ? `Yes (Trimester ${trimesterSelect.value})` : 'No';
+
+                let content = `============================================\n`;
+                content += `           NUTRITION & DIET PLAN\n`;
+                content += `============================================\n\n`;
+                content += `PERSONAL INFORMATION\n`;
+                content += `--------------------------------------------\n`;
+                content += `Full Name     : ${name}\n`;
+                content += `Email         : ${emailVal}\n`;
+                content += `Gender        : ${genderSelect.value}\n`;
+                if (genderSelect.value === 'female') {
+                    content += `Pregnant      : ${pregnantText}\n`;
+                }
+                content += `Age           : ${ageInput.value || 'N/A'} years\n`;
+                content += `Current Weight: ${weightDisplay}\n`;
+                content += `Height        : ${heightDisplay}\n`;
+                content += `BMI           : ${bmiStr}\n`;
+                content += `Activity Level: ${activityText}\n`;
+                content += `Goal          : ${goalText}\n`;
+                content += `Target Weight : ${targetDisplay}\n`;
+                if (currentTimeWeeks) {
+                    content += `Time Period   : ${currentTimeWeeks} weeks\n`;
+                }
+                if (currentGoal === 'bmi') {
+                    content += `Note          : Target weight calculated for normal BMI (22)\n`;
+                }
+                content += `Additional Notes: ${notesVal}\n\n`;
+
+                content += `DAILY NUTRITION TARGETS\n`;
+                content += `--------------------------------------------\n`;
+                content += `1. Calories       : ${cal} kcal\n`;
+                content += `2. Protein        : ${prot} g\n`;
+                content += `3. Fat            : ${fatVal} g\n`;
+                content += `4. Fiber          : ${fib} g\n`;
+                content += `5. Carbohydrates  : ${carb} g\n`;
+                content += `6. Water          : ${wat} L\n\n`;
+
+                if (currentNutrition && currentNutrition.deficitSurplus !== undefined) {
+                    const adj = currentNutrition.deficitSurplus;
+                    if (Math.abs(adj) > 10) {
+                        content += `CALORIE ADJUSTMENT\n`;
+                        content += `--------------------------------------------\n`;
+                        if (adj > 0) {
+                            content += `Surplus: +${adj.toFixed(0)} kcal/day for weight gain\n`;
+                        } else {
+                            content += `Deficit: ${adj.toFixed(0)} kcal/day for weight loss\n`;
+                        }
+                        content += `Maintenance: ${currentNutrition.maintenance.toFixed(0)} kcal/day\n\n`;
+                    }
+                }
+
+                if (currentNutrition && currentNutrition.pregnancyCalories > 0) {
+                    content += `PREGNANCY ADJUSTMENT\n`;
+                    content += `--------------------------------------------\n`;
+                    content += `Extra Calories: +${currentNutrition.pregnancyCalories.toFixed(0)} kcal/day\n`;
+                    content += `Extra Protein : +${currentNutrition.pregnancyProtein.toFixed(0)} g/day\n\n`;
+                }
+
+                content += `DISCLAIMER\n`;
+                content += `--------------------------------------------\n`;
+                content += `This diet plan is generated by AI based on the information you provided.\n`;
+                content += `Nutrient calculations are based on standard mathematical formulas.\n`;
+                content += `This plan is for informational purposes only and does not replace\n`;
+                content += `professional medical advice. Always consult a healthcare\n`;
+                content += `provider before starting any diet.\n\n`;
+                content += `Generated on: ${new Date().toLocaleString()}\n`;
+                content += `============================================`;
+
+                dietResult.textContent = content;
+                dietResult.classList.remove('hidden');
+
+                // --- DOWNLOAD TXT FILE ---
+                loadingIndicator.classList.remove('hidden');
+                requestDietBtnModal.disabled = true;
+
+                setTimeout(() => {
+                    const safeName = sanitizeFilename(name);
+                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `diet_plan_${safeName}.txt`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href);
+
+                    loadingIndicator.classList.add('hidden');
+                    requestDietBtnModal.disabled = false;
+
+                    // Show success message with email instruction
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success-msg';
+                    successDiv.innerHTML = `
+                        ✅ Diet plan downloaded successfully!<br>
+                        <strong>Please send this file to our dietitian at abc@gmail.com to get your personalized plan.</strong>
+                        <button class="close-btn" aria-label="Close message">×</button>
+                    `;
+                    successDiv.querySelector('.close-btn').addEventListener('click', () => {
+                        successDiv.remove();
+                    });
+                    const parent = dietResult.parentNode;
+                    parent.insertBefore(successDiv, dietResult.nextSibling);
+
+                    // Auto-close modal after user has time to read
+                    setTimeout(() => {
+                        if (successDiv.parentNode) successDiv.remove();
+                        closeModal();
+                        fullName.value = '';
+                        email.value = '';
+                        notes.value = '';
+                        agreeTerms.checked = false;
+                    }, 8000);
+                }, 500);
+            });
+
+            // --------------------------------------------------------------
+            // 15. localStorage — Save/Restore Form State
+            // --------------------------------------------------------------
+            function saveState() {
+                const state = {
+                    weight: weightInput.value,
+                    age: ageInput.value,
+                    height: heightMainInput.value,
+                    gender: genderSelect.value,
+                    goal: goalSelect.value,
+                    activity: activitySelect.value,
+                    targetWeight: targetWeightInput.value,
+                    timeWeeks: timeWeeksInput.value,
+                    pregnant: pregnantSelect.value,
+                    trimester: trimesterSelect.value,
+                    unit: unitSystem,
+                    timestamp: Date.now()
+                };
+                try {
+                    localStorage.setItem('nutritionCalcState', JSON.stringify(state));
+                } catch (_) { /* ignore */ }
+            }
+
+            function restoreState() {
+                let saved;
+                try {
+                    saved = localStorage.getItem('nutritionCalcState');
+                } catch (_) { return; }
+                if (!saved) return;
+
+                let state;
+                try {
+                    state = JSON.parse(saved);
+                } catch (_) { return; }
+                if (Date.now() - state.timestamp > 24 * 60 * 60 * 1000) return;
+
+                if (state.weight) weightInput.value = state.weight;
+                if (state.age) ageInput.value = state.age;
+                if (state.height) heightMainInput.value = state.height;
+                if (state.gender) genderSelect.value = state.gender;
+                if (state.goal) goalSelect.value = state.goal;
+                if (state.activity) activitySelect.value = state.activity;
+                if (state.targetWeight) targetWeightInput.value = state.targetWeight;
+                if (state.timeWeeks) timeWeeksInput.value = state.timeWeeks;
+                if (state.pregnant) pregnantSelect.value = state.pregnant;
+                if (state.trimester) trimesterSelect.value = state.trimester;
+                if (state.unit) setUnitSystem(state.unit);
+
+                // Trigger UI updates
+                updateGoalFields();
+                if (genderSelect.value === 'female') {
+                    pregnancyGroup.style.display = 'flex';
+                } else {
+                    pregnancyGroup.style.display = 'none';
+                }
+                if (weightInput.value) {
+                    performCalculation();
+                }
+            }
+
+            // Hook save to every significant input
+            [weightInput, ageInput, heightMainInput, genderSelect, goalSelect, activitySelect,
+                targetWeightInput, timeWeeksInput, pregnantSelect, trimesterSelect
+            ].forEach(el => {
+                el.addEventListener('change', saveState);
+            });
+
+            [weightInput, ageInput, heightMainInput, targetWeightInput, timeWeeksInput].forEach(el => {
+                el.addEventListener('input', saveState);
+            });
+
+            // --------------------------------------------------------------
+            // 16. Initialisation
+            // --------------------------------------------------------------
+            window.addEventListener('load', () => {
+                restoreState();
+
+                if (!localStorage.getItem('nutritionCalcState')) {
+                    setUnitSystem('metric');
+                    updateGoalFields();
+                    updateBMIDisplay();
+
+                    if (genderSelect.value === 'female') {
+                        pregnancyGroup.style.display = 'flex';
+                    } else {
+                        pregnancyGroup.style.display = 'none';
+                    }
+
+                    if (weightInput.value) {
+                        performCalculation();
+                    }
+                }
+            });
+
+        })();
+    </script>
+</body>
+</html>
