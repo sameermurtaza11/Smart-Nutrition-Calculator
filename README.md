@@ -76,7 +76,7 @@ Lose Deficit = (Weight − Target) × 7700 ÷ (Weeks × 7)
 📁 File Structure
 
 ```
-nutrition-calculator.html   # Complete single‑file application (HTML + CSS + JS)
+index.html   # Complete single‑file application (HTML + CSS + JS)
 ```
 
 All code is contained in one HTML file. No external dependencies or build tools required.
@@ -87,7 +87,7 @@ All code is contained in one HTML file. No external dependencies or build tools 
 
 Option 1: Direct Use
 
-1. Download nutrition-calculator.html
+1. Download index.html
 2. Open the file in any modern web browser
 3. Enter your personal details and click Calculate Nutrients
 4. Click Request Diet Plan to open the modal, fill in your name/email, and download your plan
@@ -99,7 +99,7 @@ Upload the file to any static hosting service (GitHub Pages, Netlify, Vercel, et
 Option 3: Embed
 
 ```html
-<!-- Copy the entire content of nutrition-calculator.html into your project -->
+<!-- Copy the entire content of index.html into your project -->
 ```
 
 ---
