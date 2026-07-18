@@ -3,8 +3,6 @@
 
 A comprehensive, single‑file HTML/CSS/JS tool that calculates daily nutrition targets based on user inputs (weight, age, height, gender, goal, activity level, pregnancy status) and generates a downloadable diet plan.
 
-https://via.placeholder.com/800x450?text=Nutrition+Calculator+Preview
-
 ---
 
 ✨ Features
